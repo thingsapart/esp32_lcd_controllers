@@ -154,7 +154,6 @@ void lcd_controllers_init_and_start(lcd_ui_init_fn_t ui_init_fn);
 // Accessors (valid after lcd_controllers_init()):
 lv_display_t *lcd_controllers_get_display(void);
 lv_indev_t   *lcd_controllers_get_touch_indev(void);
-lv_indev_t   *lcd_controllers_get_encoder_indev(void);  // if encoder pins defined
 ```
 
 `lcd_controllers_init()` is the MCU-to-LVGL bootstrap sequence:

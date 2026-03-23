@@ -109,12 +109,6 @@ lv_display_t *lcd_controllers_get_display(void);
 /** @brief Returns the LVGL touch indev handle (may be NULL if no touch). */
 lv_indev_t   *lcd_controllers_get_touch_indev(void);
 
-/* ── Optional encoder indev (if ENCODER_PIN_X / ENCODER_PIN_Y are defined) ── */
-#if defined(ENCODER_PIN_X) && defined(ENCODER_PIN_Y)
-/** @brief Returns the LVGL encoder indev handle. */
-lv_indev_t   *lcd_controllers_get_encoder_indev(void);
-#endif
-
 #endif /* TFT_WIDTH */
 
 #ifdef __cplusplus

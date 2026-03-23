@@ -5,7 +5,6 @@
  * This file wires together:
  *   - Board-specific display_alloc() / display_setup() from the driver layer.
  *   - LVGL initialisation (lv_init, lv_display_create, lv_indev_create).
- *   - The optional encoder indev.
  *   - Starting the LVGL FreeRTOS task.
  *
  * Weak symbols mcu_setup() and mcu_startup() let user code override MCU-level
@@ -23,22 +22,10 @@
 #include "driver/driver_interface.hpp"
 #include "lvgl_task.h"
 
-#if defined(ENCODER_PIN_X) && defined(ENCODER_PIN_Y)
-#include "driver/encoder.hpp"
-/* encoder_indev_read is defined as a weak symbol in encoder.cpp.
- * Applications may override it without modifying this file. */
-extern "C" void encoder_indev_read(lv_indev_t *indev, lv_indev_data_t *data);
-#endif
-
 static const char *TAG = "lcd_ctrl";
 
 static lv_display_t *s_disp         = NULL;
 static lv_indev_t   *s_touch_indev  = NULL;
-
-#if defined(ENCODER_PIN_X) && defined(ENCODER_PIN_Y)
-static lv_indev_t   *s_enc_indev    = NULL;
-static lv_group_t   *s_default_group = NULL;
-#endif
 
 /* ── Overridable hooks ───────────────────────────────────────────────────── */
 
@@ -83,25 +70,8 @@ void lcd_controllers_init(void) {
     s_disp        = lv_display_create(TFT_WIDTH, TFT_HEIGHT);
     s_touch_indev = lv_indev_create();
 
-#if defined(ENCODER_PIN_X) && defined(ENCODER_PIN_Y)
-    s_enc_indev = lv_indev_create();
-#endif
-
     LOGI(TAG, "display_setup");
     display_setup(s_disp, s_touch_indev);
-
-#if defined(ENCODER_PIN_X) && defined(ENCODER_PIN_Y)
-    /* Wire the encoder indev and attach a default group so that
-     * scroll-wheel / value-change events reach focused widgets. */
-    lv_indev_set_type(s_enc_indev, LV_INDEV_TYPE_ENCODER);
-    lv_indev_set_read_cb(s_enc_indev, encoder_indev_read);
-
-    s_default_group = lv_group_create();
-    lv_indev_set_group(s_enc_indev, s_default_group);
-    lv_group_set_editing(s_default_group, true);
-    lv_group_set_default(s_default_group);
-    LOGI(TAG, "encoder indev registered");
-#endif
 
     LOGI(TAG, "lcd_controllers_init done  (display %d x %d)",
          TFT_WIDTH, TFT_HEIGHT);
@@ -118,9 +88,5 @@ void lcd_controllers_init_and_start(lcd_ui_init_fn_t ui_init_fn) {
 
 lv_display_t *lcd_controllers_get_display(void)      { return s_disp; }
 lv_indev_t   *lcd_controllers_get_touch_indev(void)  { return s_touch_indev; }
-
-#if defined(ENCODER_PIN_X) && defined(ENCODER_PIN_Y)
-lv_indev_t   *lcd_controllers_get_encoder_indev(void) { return s_enc_indev; }
-#endif
 
 #endif /* TFT_WIDTH */
