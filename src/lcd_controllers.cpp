@@ -18,6 +18,10 @@
 #include <Arduino.h>
 #include <lvgl.h>
 
+#ifdef CONFIG_ESP32
+#include <esp_heap_caps.h>
+#endif
+
 #include "debug.h"
 #include "driver/driver_interface.hpp"
 #include "lvgl_task.h"
@@ -53,6 +57,27 @@ __attribute__((weak)) void mcu_setup(void) {
  */
 __attribute__((weak)) void mcu_startup(void) {
     /* default: nothing */
+}
+
+/**
+ * Weak default RAM usage debug helper.
+ *
+ * User project can override this function to provide custom logging.
+ */
+__attribute__((weak)) void ram_usage(void) {
+#ifdef ARDUINO
+    (void)0; // keep compiler happy when no print support available
+#endif
+#ifdef CONFIG_SPIRAM
+    size_t total_psram = heap_caps_get_total_size(MALLOC_CAP_SPIRAM);
+    size_t free_psram = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+    size_t total_sram = heap_caps_get_total_size(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+    size_t free_sram = heap_caps_get_free_size(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+    LOGI("ram_usage", "SRAM free: %u/%u, PSRAM free: %u/%u", (unsigned)free_sram, (unsigned)total_sram, (unsigned)free_psram, (unsigned)total_psram);
+#else
+    size_t free_sram = heap_caps_get_free_size(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+    LOGI("ram_usage", "SRAM free: %u", (unsigned)free_sram);
+#endif
 }
 
 /* ── Public API ─────────────────────────────────────────────────────────── */

@@ -32,7 +32,8 @@
 #endif
 
 /* ── Backend ─────────────────────────────────────────────────────────────── */
-#ifdef ESP32_HW
+#if defined(ESP32_HW) && defined(ARDUINO)
+#include <Arduino.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -43,6 +44,21 @@
         if (__b) {                                                             \
             snprintf(__b, 256, fmt "\n" __VA_OPT__(,) ##__VA_ARGS__);         \
             Serial.print(__b);                                                 \
+            free(__b);                                                         \
+        }                                                                      \
+    } while (0)
+#elif defined(ESP32_HW)
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+/* Single heap-buffer snprintf to avoid double _svfprintf_r overhead. */
+#define LOG_BACKEND(fmt, ...)                                                  \
+    do {                                                                       \
+        char *__b = (char *)malloc(256);                                       \
+        if (__b) {                                                             \
+            snprintf(__b, 256, fmt "\n" __VA_OPT__(,) ##__VA_ARGS__);         \
+            printf("%s", __b);                                               \
+            fflush(stdout);                                                    \
             free(__b);                                                         \
         }                                                                      \
     } while (0)
