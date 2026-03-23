@@ -1,0 +1,6 @@
+.pio
+.dummy
+*.o
+*.elf
+*.bin
+managed_components

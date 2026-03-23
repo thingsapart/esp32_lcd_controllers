@@ -1,0 +1,41 @@
+{
+  "name": "esp32_lcd_controllers",
+  "version": "0.1.0",
+  "description": "Reusable ESP32 board support package: display drivers + LVGL task for Guition 4848S040, JC3248W535C, WT32-SC01-Plus, ESP32-2424S012, JC1060P470, JC8012P4A1.",
+  "keywords": ["esp32", "esp32-s3", "esp32-p4", "lvgl", "display", "tft", "touch"],
+  "authors": [
+    {
+      "name": "esp32_lcd_controllers contributors",
+      "url":  "https://github.com/your-org/esp32_lcd_controllers"
+    }
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/your-org/esp32_lcd_controllers",
+  "repository": {
+    "type": "git",
+    "url":  "https://github.com/your-org/esp32_lcd_controllers.git"
+  },
+  "dependencies": [
+    {
+      "name": "lvgl",
+      "version": ">=9.0.0"
+    },
+    {
+      "name": "LovyanGFX",
+      "version": ">=1.0.0"
+    }
+  ],
+  "build": {
+    "srcDir": "src",
+    "includeDir": "include",
+    "srcFilter": [
+      "+<**/*.cpp>",
+      "+<**/*.c>",
+      "+<**/*.S>"
+    ],
+    "flags": [
+      "-I${LIB_PATH}/src",
+      "-I${LIB_PATH}/include"
+    ]
+  }
+}
