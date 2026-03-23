@@ -64,7 +64,7 @@ esp32_lcd_controllers/
 
 ```bash
 mkdir -p ext
-git submodule add https://github.com/your-org/esp32_lcd_controllers.git ext/esp32_lcd_controllers
+git submodule add https://github.com/thingsapart/esp32_lcd_controllers.git contrib/esp32_lcd_controllers
 git submodule update --init --recursive
 ```
 
@@ -74,7 +74,7 @@ LVGL requires an `lv_conf.h` in a directory that is in the compiler include path
 The easiest place is the **project root** (next to `platformio.ini`):
 
 ```bash
-cp ext/esp32_lcd_controllers/include/lv_conf_template.h lv_conf.h
+cp contrib/esp32_lcd_controllers/include/lv_conf_template.h lv_conf.h
 # then edit lv_conf.h to taste
 ```
 
@@ -85,7 +85,7 @@ finds `lv_conf.h` in your project root.
 
 ```ini
 [platformio]
-extra_configs = ext/esp32_lcd_controllers/esp32_lcd_controllers.ini
+extra_configs = contrib/esp32_lcd_controllers/esp32_lcd_controllers.ini
 
 [env:my_app]
 ; Choose one of: lcd_ctrl_4848s040 | lcd_ctrl_2424s012 | lcd_ctrl_jc3248w535c
@@ -93,12 +93,12 @@ extra_configs = ext/esp32_lcd_controllers/esp32_lcd_controllers.ini
 extends = lcd_ctrl_4848s040
 
 ; Make PlatformIO compile the library files.
-lib_extra_dirs = ext/esp32_lcd_controllers
+lib_extra_dirs = contrib/esp32_lcd_controllers
 
 ; Add sub-directory include paths.
 build_flags = ${lcd_ctrl_4848s040.build_flags}
-    -I ext/esp32_lcd_controllers/src
-    -I ext/esp32_lcd_controllers/include
+    -I contrib/esp32_lcd_controllers/src
+    -I contrib/esp32_lcd_controllers/include
     -I .   ; picks up your lv_conf.h
 
 ; Compile your app src/ PLUS the board drivers from the submodule.
@@ -106,7 +106,7 @@ build_flags = ${lcd_ctrl_4848s040.build_flags}
 ; board's code is actually compiled.
 build_src_filter =
     +<*>
-    +<../../ext/esp32_lcd_controllers/src/driver/**>
+    +<../../contrib/esp32_lcd_controllers/src/driver/**>
 ```
 
 ### 4 — Write `src/main.cpp`
