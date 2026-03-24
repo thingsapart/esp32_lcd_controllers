@@ -2,8 +2,6 @@
 
 #include <driver/i2c.h>
 #include <lvgl.h>
-#include <freertos/semphr.h>
-#include <freertos/task.h>
 
 /* Ensure LovyanGFX internal features are disabled to prevent ODR violations and bloat */
 #ifndef LGFX_NO_LFS
@@ -45,17 +43,6 @@
 #include "debug.h"
 
 static const char *TAG = "driver_guiition_4848s040";
-static SemaphoreHandle_t s_dma_done_sem = nullptr;
-static TaskHandle_t s_dma_wait_task = nullptr;
-
-static void dma_wait_task(void *arg) {
-  (void)arg;
-  for (;;) {
-    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-    tft.waitDMA();
-    xSemaphoreGive(s_dma_done_sem);
-  }
-}
 
 class LGFX_GUITION4848S040 : public lgfx::LGFX_Device {
  public:
@@ -236,16 +223,14 @@ void display_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map) {
     tft.startWrite();
     started_here = true;
   }
-
-  xSemaphoreTake(s_dma_done_sem, portMAX_DELAY);
   tft.pushImageDMA(area->x1, area->y1, area->x2 - area->x1 + 1,
                    area->y2 - area->y1 + 1, (lgfx::rgb565_t *)px_map);
   if (started_here) {
     tft.endWrite();
   }
-
-  xTaskNotifyGive(s_dma_wait_task);
-  xSemaphoreTake(s_dma_done_sem, portMAX_DELAY);
+  while (tft.dmaBusy()) {
+    tft.waitDMA();
+  }
   lv_disp_flush_ready(disp);
 }
 #endif
@@ -307,15 +292,6 @@ void display_setup(lv_display_t *disp, lv_indev_t *indev) {
   tft.begin();
   tft.setRotation(1);
   tft.setBrightness(255);
-
-  s_dma_done_sem = xSemaphoreCreateBinary();
-  assert(s_dma_done_sem && "DMA completion semaphore creation failed");
-  xSemaphoreGive(s_dma_done_sem);
-
-  BaseType_t task_ok = xTaskCreatePinnedToCore(
-      dma_wait_task, "guition_dma_wait", 2048, NULL,
-      tskIDLE_PRIORITY + 3, &s_dma_wait_task, 0);
-  assert(task_ok == pdPASS && "DMA wait task creation failed");
 
 #if LV_USE_LOG != 0
   lv_log_register_print_cb(
