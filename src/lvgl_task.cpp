@@ -103,19 +103,31 @@ static void lvgl_task_fn(void *pv) {
     /* Subscribe to the task watchdog so we detect real hangs even when
      * software-render workers starve IDLE0 during heavy render passes. */
 #ifdef ESP32_HW
+    LOGI(TAG, "registering task watchdog");
     esp_task_wdt_add(NULL);
+    LOGI(TAG, "task watchdog registered");
 #endif
 
-    /* Call user UI initialisation before first render. */
+    /* Call user UI initialisation before first render.
+     * Reset the watchdog first — create_ui() + I2C init can take several
+     * seconds on PSRAM-heavy builds and would otherwise trip the WDT. */
     if (p->ui_init_fn) {
         LOGI(TAG, "calling ui_init_fn");
+#ifdef ESP32_HW
+        LOGI(TAG, "resetting task watchdog before ui_init_fn");
+        esp_task_wdt_reset(); /* keep WDT happy during slow UI init */
+#endif
         p->ui_init_fn(p->disp, p->touch);
-        LOGI(TAG, "ui_init_fn done");
+        LOGI(TAG, "ui_init_fn completed");
     }
 
     vTaskDelay(1);
 
     while (true) {
+        static uint32_t loop_count = 0;
+        if (++loop_count % 100 == 0) {
+            LOGI(TAG, "LVGL task loop #%u", loop_count);
+        }
 #ifdef ESP32_HW
         esp_task_wdt_reset();
 #endif
